@@ -1,0 +1,68 @@
+#kics-scan disable=baee238e-1921-4801-9c3f-79ae1d7b2cbc
+name: Backend Build & Deploy
+
+on:
+  push:
+    # Only run this workflow if changes are made to the backend code or the workflow file
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+# Permissions required for the workflow to run
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+env:
+    AWS_REGION: us-east-1
+    IMAGE_TAG: ${{ github.run_number }}  # Use the GitHub Tag as the image tag
+    ECR_REPO: ${{ secrets.ECR_REPO }}  # ECR repository URL
+    ECS_SERVICE: ecs-demo-backend-service
+    ECS_CLUSTER: ecs-demo-cluster
+    ECS_TASK_NAME: ecs-demo-backend
+    CONTAINER_NAME: "backend" 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout code
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        id: build-image
+        run: |
+          cd backend
+          docker build -t ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }} .
+          docker push ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}
+          echo "image=${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_NAME }} --query taskDefinition > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1.7.3
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+      
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

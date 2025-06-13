@@ -1,0 +1,112 @@
+#kics-scan disable=baee238e-1921-4801-9c3f-79ae1d7b2cbc
+name: Infra Deploy
+
+on:
+  push:
+    branches:
+        - main
+        - dev
+
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+            tflint_version: latest # Use the latest version of TFLint
+
+      - name: Cache plugin dir
+        uses: actions/cache@v4
+        with:
+            path: ~/.tflint.d/plugins
+            key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
+      
+      - name: Show version
+        run: tflint --version
+      
+      - name: Init TFLint
+        run: |
+            cd infra
+            tflint --init
+        env:
+            # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
+            GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Run TFLint
+        run: |
+            cd infra
+            tflint -f compact
+
+      - name: Mkdir results-dir
+        # make sure results dir is created
+        run: mkdir -p results-dir
+
+      - name: Run KICS Scan
+        uses: Checkmarx/kics-action@v2.1.10
+        with:
+          path: infra
+          output_formats: sarif,json
+          output_path: results-dir
+          platform_type: terraform
+          fail_on: critical
+
+      - name: display kics results
+        run: |
+            cat results-dir/results.sarif
+            cat results-dir/results.json
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.1.7 # Specify the Terraform version to use
+
+      - name: Terraform Format Check
+        run: |
+          cd infra
+          terraform fmt -check # Check if Terraform files are formatted correctly
+      
+      - name: Terraform Init
+        run: |
+          cd infra
+          terraform init # Initialize Terraform, downloading necessary providers and modules
+
+      - name: Terraform Validate
+        run: |
+          cd infra
+          terraform validate # Validate the Terraform configuration files
+    
+      - name: Terraform Plan
+        run: |
+          cd infra
+          terraform plan -out=tfplan # Create an execution plan and save it to tfplan
+
+      - name: Terraform Show Plan
+        run: |
+          cd infra
+          terraform show -json tfplan > tfplan.json # Show the plan in JSON format
+
+      - name: Terraform Apply
+        run: |
+          cd infra
+          terraform apply -auto-approve

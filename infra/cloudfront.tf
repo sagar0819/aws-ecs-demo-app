@@ -45,6 +45,17 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 }
 
+resource "aws_cloudfront_origin_access_identity" "frontend" {
+  comment    = "OAI for frontend S3 bucket"
+  depends_on = [aws_s3_bucket.frontend] # Ensure the S3 bucket is created before the OAI
+}
+
 output "frontend_cloudfront_domain" {
-  value = aws_cloudfront_distribution.frontend.domain_name
+  value       = aws_cloudfront_distribution.frontend.domain_name
+  description = "value of the CloudFront distribution domain name for the frontend S3 bucket"
+}
+
+output "aws_cloudfront_origin_access_identity_iam_arn" {
+  value       = aws_cloudfront_origin_access_identity.frontend.iam_arn
+  description = "IAM ARN of the CloudFront Origin Access Identity for the frontend S3 bucket"
 }

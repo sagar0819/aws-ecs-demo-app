@@ -61,6 +61,8 @@ resource "aws_s3_bucket_policy" "frontend_policy" {
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket.frontend, aws_cloudfront_origin_access_identity.frontend]
 }
 
 output "frontend_s3_bucket" {

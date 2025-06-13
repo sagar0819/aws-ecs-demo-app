@@ -57,10 +57,10 @@ jobs:
         run: mkdir -p results-dir
 
       - name: Run KICS Scan
-        uses: checkmarx/kics-github-action@latest
+        uses: Checkmarx/kics-action@v2.1.10
         with:
           path: infra
-          output_format: sarif,json
+          output_formats: sarif,json
           output_path: results-dir
           platform_type: terraform
           fail_on: none # Set to 'none' to not fail the workflow on KICS findings

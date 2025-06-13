@@ -20,12 +20,13 @@ resource "aws_cloudfront_distribution" "frontend" {
       cookies {
         forward = "none"
       }
-      headers = ["*"]
+      # No headers forwarded for S3 origin
     }
   }
 
   price_class = "PriceClass_100"
 
+  # Correct block names for restrictions and viewer_certificate
   restrictions {
     geo_restriction {
       restriction_type = "none"

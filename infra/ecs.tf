@@ -72,6 +72,16 @@ resource "aws_ecs_service" "backend" {
   depends_on = [aws_lb_listener.app_listener]
 }
 
+# Application Load Balancer for ECS Service
+resource "aws_lb" "app_alb" {
+  name               = "ecs-demo-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [var.ecs_security_group_id]
+  subnets            = var.ecs_subnet_ids
+  drop_invalid_header_fields = true
+}
+
 # ALB Listener for ECS Service
 resource "aws_lb_listener" "app_listener" {
   load_balancer_arn = aws_lb.app_alb.arn

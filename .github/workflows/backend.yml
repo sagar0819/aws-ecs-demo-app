@@ -3,9 +3,6 @@ name: Backend Build & Deploy
 
 on:
   push:
-    # Trigger this workflow on changes to the backend directory or the workflow file itself
-    branches:
-      - main
     # Only run this workflow if changes are made to the backend code or the workflow file
     paths:
       - 'backend/**'

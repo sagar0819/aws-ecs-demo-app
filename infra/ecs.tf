@@ -74,10 +74,11 @@ resource "aws_lb_listener" "app_listener" {
 
 # ALB Target Group for ECS Service
 resource "aws_lb_target_group" "app_tg" {
-  name     = "ecs-demo-tg"
-  port     = 8000
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
+  name        = "ecs-demo-tg"
+  target_type = "ip"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
   health_check {
     path                = "/health"
     matcher             = "200"

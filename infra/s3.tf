@@ -42,6 +42,7 @@ resource "aws_s3_bucket_policy" "frontend_policy" {
       {
         Effect = "Allow"
         Principal = {
+          # tflint-ignore: terraform_deprecated_interpolation
           "AWS" = "${aws_cloudfront_origin_access_identity.frontend.iam_arn}"
         }
         Action   = ["s3:GetObject"]

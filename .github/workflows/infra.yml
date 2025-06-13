@@ -65,7 +65,7 @@ jobs:
           output_formats: sarif,json
           output_path: results-dir
           platform_type: terraform
-          fail_on: none # Set to 'none' to not fail the workflow on KICS findings
+          fail_on: critical
 
       - name: display kics results
         run: |
@@ -96,7 +96,7 @@ jobs:
         run: |
           cd infra
           terraform plan -out=tfplan # Create an execution plan and save it to tfplan
-          
+
       - name: Terraform Show Plan
         run: |
           cd infra

@@ -27,8 +27,26 @@ resource "aws_ecs_task_definition" "backend" {
         }
       ]
       environment = []
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          # tflint-ignore: terraform_deprecated_interpolation
+          awslogs-group = "${aws_cloudwatch_log_group.ecs_backend_logs.name}"
+          # tflint-ignore: terraform_deprecated_interpolation
+          awslogs-region        = "${var.aws_region}"
+          awslogs-stream-prefix = "ecs"
+        }
+      }
     }
   ])
+
+  depends_on = [aws_cloudwatch_log_group.ecs_backend_logs]
+}
+
+resource "aws_cloudwatch_log_group" "ecs_backend_logs" {
+  name              = "/ecs/ecs-demo-backend"
+  retention_in_days = 7
+  kms_key_id        = "alias/aws/logs"
 }
 
 # ECS Service

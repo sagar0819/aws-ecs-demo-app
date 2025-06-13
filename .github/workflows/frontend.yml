@@ -3,9 +3,6 @@ name: Frontend Build & Deploy
 
 on:
   push:
-    # Trigger this workflow on changes to the frontend directory or the workflow file itself
-    branches:
-      - main
     # Only run this workflow if changes are made to the frontend code or the workflow file
     paths:
       - 'frontend/**'
@@ -25,19 +22,24 @@ jobs:
       CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
     steps:
       - uses: actions/checkout@v4
+        name: Checkout code
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Install dependencies
         run: |
           cd frontend
-          npm ci
+          npm install
+
       # Build the React app for production and output to frontend/build directory
       - name: Build
         run: |

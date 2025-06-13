@@ -13,13 +13,14 @@ permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
 
+env:
+    AWS_REGION: us-east-1
+    IMAGE_TAG: ${{ github.run_number }}  # Use the GitHub Tag as the image tag
+    ECR_REPO: ${{ secrets.ECR_REPO }}  # ECR repository URL
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    env:
-      AWS_REGION: us-east-1
-      IMAGE_TAG: ${{ github.run_number }}  # Use the GitHub Tag as the image tag
-      ECR_REPO: ${{ secrets.ECR_REPO }}  # ECR repository URL
     steps:
       - uses: actions/checkout@v4
       - name: Configure AWS credentials (OIDC)

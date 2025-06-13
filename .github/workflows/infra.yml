@@ -18,26 +18,28 @@ jobs:
     env:
       AWS_REGION: us-east-1
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: actions/cache@v4
-        name: Cache plugin dir
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+            tflint_version: latest # Use the latest version of TFLint
+
+      - name: Cache plugin dir
+        uses: actions/cache@v4
         with:
             path: ~/.tflint.d/plugins
             key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
       
       - name: Show version
         run: tflint --version
-
-      - uses: terraform-linters/setup-tflint@v4
-        name: Setup TFLint
-        with:
-            tflint_version: latest # Use the latest version of TFLint
       
       - name: Init TFLint
         run: |
@@ -75,24 +77,26 @@ jobs:
         with:
           terraform_version: 1.1.7 # Specify the Terraform version to use
 
+      - name: Terraform Format Check
+        run: |
+          cd infra
+          terraform fmt -check # Check if Terraform files are formatted correctly
+      
       - name: Terraform Init
         run: |
           cd infra
           terraform init # Initialize Terraform, downloading necessary providers and modules
 
-      - name: Terraform Format Check
-        run: |
-          cd infra
-          terraform fmt -check # Check if Terraform files are formatted correctly
-
       - name: Terraform Validate
         run: |
           cd infra
           terraform validate # Validate the Terraform configuration files
+    
       - name: Terraform Plan
         run: |
           cd infra
           terraform plan -out=tfplan # Create an execution plan and save it to tfplan
+          
       - name: Terraform Show Plan
         run: |
           cd infra

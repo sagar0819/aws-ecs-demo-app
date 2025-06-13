@@ -70,8 +70,8 @@ jobs:
       - name: Deploy to S3
         run: |
           aws s3 sync frontend/build s3://$S3_BUCKET --delete
-          aws s3 cp frontend/build/index.html s3://$S3_BUCKET/index.html --metadata-directive REPLACE --cache-control "no-cache"
-          aws s3 cp frontend/build/favicon.ico s3://$S3_BUCKET/favicon.ico --metadata-directive REPLACE --cache-control "no-cache"
+
+    # Invalidate CloudFront cache to ensure the latest content is served
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"

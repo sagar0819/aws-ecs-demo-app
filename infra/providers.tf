@@ -14,16 +14,21 @@ terraform {
 }
 
 variable "aws_region" {
-  default = "us-east-1"
+  default     = "us-east-1"
+  description = "AWS region where resources will be created"
+  type        = string
 }
 
 variable "project_name" {
-  default = "ecs-demo-app"
+  default     = "ecs-demo-app"
+  description = "Name of the project for resource naming"
+  type        = string
 }
 
 variable "ecr_repo_name" {
   description = "Name of the ECR repository for the backend service"
   default     = "ecs-demo-backend"
+  type        = string
 }
 
 variable "vpc_id" {
@@ -44,4 +49,5 @@ variable "ecs_security_group_id" {
 variable "image_tag" {
   description = "Docker image tag for the backend service"
   default     = "v1"
+  type        = string
 }

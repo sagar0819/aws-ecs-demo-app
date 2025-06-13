@@ -1,0 +1,44 @@
+#kics-scan disable=baee238e-1921-4801-9c3f-79ae1d7b2cbc
+name: Backend Build & Deploy
+
+on:
+  push:
+    # Trigger this workflow on changes to the backend directory or the workflow file itself
+    branches:
+      - main
+    # Only run this workflow if changes are made to the backend code or the workflow file
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+# Permissions required for the workflow to run
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      IMAGE_TAG: ${{ github.run_number }}  # Use the GitHub Tag as the image tag
+      ECR_REPO: ${{ secrets.ECR_REPO }}  # ECR repository URL
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build, tag, and push image to ECR
+        run: |
+          cd backend
+          docker build -t ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }} .
+          docker push ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}
+          terraform validate
+          terraform init
+          terraform plan -var="image_tag=v${{ env.IMAGE_TAG }}" -out=tfplan
+          terraform apply -auto-approve

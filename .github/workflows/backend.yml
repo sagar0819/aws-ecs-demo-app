@@ -19,7 +19,7 @@ env:
     ECR_REPO: ${{ secrets.ECR_REPO }}  # ECR repository URL
     ECS_SERVICE: ecs-demo-backend-service
     ECS_CLUSTER: ecs-demo-cluster
-    ECS_TASK_DEFINITION: .aws/task-definition.json
+    ECS_TASK_NAME: ecs-demo-backend
     CONTAINER_NAME: "backend" 
 
 jobs:
@@ -47,11 +47,15 @@ jobs:
           docker push ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}
           echo "image=${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
 
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_NAME }} --query taskDefinition > task-definition.json
+
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1.7.3
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
       

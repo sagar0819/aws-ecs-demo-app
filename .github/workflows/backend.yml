@@ -45,8 +45,8 @@ jobs:
           cd backend
           docker build -t ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }} .
           docker push ${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}
-          echo "${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
-        
+          echo "image=${{ env.ECR_REPO }}:v${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1.7.3

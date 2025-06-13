@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket = "sagar-github-tf-backend"
+    bucket = var.s3_bucket_name
     key    = "terraform.tfstate"
-    region = var.aws_region
+    region = "us-east-1"
   }
 }
 

@@ -45,9 +45,3 @@ variable "ecs_security_group_id" {
   description = "Security group ID for the ECS service"
   type        = string
 }
-
-variable "image_tag" {
-  description = "Docker image tag for the backend service"
-  default     = "v1"
-  type        = string
-}

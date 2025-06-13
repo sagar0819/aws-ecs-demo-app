@@ -31,8 +31,7 @@ resource "aws_ecs_task_definition" "backend" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          # tflint-ignore: terraform_deprecated_interpolation
-          awslogs-group = "${aws_cloudwatch_log_group.ecs_backend_logs.name}"
+          awslogs-group = "/ecs/ecs-demo-backend"
           # tflint-ignore: terraform_deprecated_interpolation
           awslogs-region        = "${var.aws_region}"
           awslogs-create-group  = "true"

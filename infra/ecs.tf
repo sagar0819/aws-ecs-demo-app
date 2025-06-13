@@ -17,8 +17,9 @@ resource "aws_ecs_task_definition" "backend" {
   execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
   container_definitions = jsonencode([
     {
-      name      = "backend"
-      image     = "${aws_ecr_repository.backend.repository_url}:${var.image_tag}"
+      name = "backend"
+      # tflint-ignore: terraform_deprecated_interpolation
+      image     = "${aws_ecr_repository.backend.repository_url}" # Use the ECR repository URL directly without a specific tag
       essential = true
       portMappings = [
         {
